@@ -31,6 +31,7 @@ module Pod
               # embedded in embedded targets.
               #
               create_embed_frameworks_script if target.includes_frameworks? && !target.requires_host_target?
+              create_embed_xcframeworks_script if target.includes_xcframeworks? && !target.requires_host_target?
               create_bridge_support_file(native_target)
               create_copy_resources_script if target.includes_resources?
               create_acknowledgements
@@ -145,8 +146,8 @@ module Pod
           # Creates a script that embeds the frameworks to the bundle of the client
           # target.
           #
-          # @note   We can't use Xcode default copy bundle resource phase, because
-          #         we need to ensure that we only copy the resources, which are
+          # @note   We can't use Xcode default link libraries phase, because
+          #         we need to ensure that we only copy the frameworks which are
           #         relevant for the current build configuration.
           #
           # @return [void]
@@ -154,6 +155,23 @@ module Pod
           def create_embed_frameworks_script
             path = target.embed_frameworks_script_path
             generator = Generator::EmbedFrameworksScript.new(target.framework_paths_by_config)
+            update_changed_file(generator, path)
+            add_file_to_support_group(path)
+          end
+
+          # Creates a script that embeds the xcframeworks to the bundle of the client
+          # target.
+          #
+          # @note   We can't use Xcode default link libraries phase, because
+          #         we need to ensure that we only copy the frameworks which are
+          #         relevant for the current build configuration.
+          #
+          # @return [void]
+          #
+          def create_embed_xcframeworks_script
+            path = target.embed_xcframeworks_script_path
+            generator = Generator::EmbedXCFrameworksScript.new(target.xcframeworks_by_config,
+                                                               sandbox.root, target.platform)
             update_changed_file(generator, path)
             add_file_to_support_group(path)
           end
